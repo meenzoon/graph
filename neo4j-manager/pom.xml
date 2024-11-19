@@ -30,24 +30,4 @@
 			<version>0.49.2</version>
 		</dependency>
 	</dependencies>
-
-	<repositories>
-		<!--
-		<repository>
-			<id>clojars</id>
-			<name>Clojars</name>
-			<url>https://repo.clojars.org/</url>
-		</repository>
-		
-		<repository>
-			<id>test</id>
-			<name>tt</name>
-			<url>https://maven.icm.edu.pl/artifactory/repo/</url>
-		</repository>
-		<repository>
-			<id>slimjars</id>
-			<url>https://maven.slimjars.com/</url>
-		</repository>
-		-->
-	</repositories>
 </project>

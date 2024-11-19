@@ -33,7 +33,7 @@ public class NeodbManager {
 			
 			@Override
 			public void initialize(Map<String, Object> metaData) {
-				driver = GraphDatabase.driver("neo4j://localhost:7687", AuthTokens.basic("", ""));
+				driver = GraphDatabase.driver("", AuthTokens.basic("", ""));
 				session = driver.session();
 				ta = session.beginTransaction();
 				System.out.println("initialize");

@@ -1,11 +1,20 @@
-#maven
-target
+# general
+lib
+build
+
+# maven
+target/
+log/
 
 # eclipse
-.settings
+.settings/
 .project
 .classpath
 
 # intellij
+.idea/
 .idea
-.iml
+*.iml
+
+# Mac
+.DS_Store
