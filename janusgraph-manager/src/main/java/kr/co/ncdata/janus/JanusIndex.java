@@ -3,6 +3,7 @@ package kr.co.ncdata.janus;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.structure.Edge;
+import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.janusgraph.core.Cardinality;
 import org.janusgraph.core.JanusGraph;
 import org.janusgraph.core.JanusGraphFactory;
@@ -60,6 +61,40 @@ public class JanusIndex {
 	}
 
 	/**
+	 * Vertex Key 추가
+	 */
+	private void addVertexKey() {
+		JanusGraphManagement mgmt = graph.openManagement();
+
+		try {
+			String keyName = "NODE_ID";
+			if (mgmt.getPropertyKey(keyName) == null) {
+				PropertyKey newKey = mgmt.makePropertyKey(keyName).dataType(String.class)  // 데이터 타입 지정 (예: String)
+					.cardinality(Cardinality.SINGLE)  // 카디널리티 지정
+					.make();
+
+				mgmt.buildIndex("NODE_INDEX", Vertex.class).addKey(newKey).buildMixedIndex("search");
+				//ManagementSystem.awaitGraphIndexStatus(graph, "EDGE_INDEX").call();
+
+				// Edge Label에 새 Key 추가 (선택적)
+				//String edgeLabel = "existingEdgeLabel";
+				//mgmt.addProperties(mgmt.getEdgeLabel(edgeLabel), newKey);
+
+
+				// 변경사항 커밋
+				mgmt.commit();
+				log.info("Vertex Key added: {}", keyName);
+			} else {
+				log.info("Vertex Key: {} already exists", keyName);
+				mgmt.rollback();
+			}
+		} catch (Exception e) {
+			mgmt.rollback();
+			log.error("", e);
+		}
+	}
+
+	/**
 	 * Edge Key 추가
 	 */
 	private void addEdgeKey() {
@@ -79,7 +114,7 @@ public class JanusIndex {
 				//String edgeLabel = "existingEdgeLabel";
 				//mgmt.addProperties(mgmt.getEdgeLabel(edgeLabel), newKey);
 
-				
+
 				// 변경사항 커밋
 				mgmt.commit();
 				log.info("Edge Key added: {}", keyName);
