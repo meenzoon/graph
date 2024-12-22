@@ -41,8 +41,7 @@ public class JanusEdge {
 		int index = 0;
 
 		log.info("read csv");
-		try (BufferedReader reader = new BufferedReader(new FileReader("/home/janus/map/daegu_way.csv"))) {
-			//try (BufferedReader reader = new BufferedReader(new FileReader("C:\\tools\\map\\daegu_way.csv"))) {
+		try (BufferedReader reader = new BufferedReader(new FileReader(JanusManager.OSM_WAY_FILE))) {
 			String line;
 			while ((line = reader.readLine()) != null) {
 				if (++index == 1)
