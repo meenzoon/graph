@@ -1,14 +1,17 @@
 package kr.co.ncdata.janus;
 
+import kr.co.ncdata.janus.vo.MoctLinkVo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.janusgraph.core.JanusGraph;
 import org.janusgraph.core.JanusGraphFactory;
 import org.janusgraph.core.JanusGraphTransaction;
+import org.janusgraph.core.attribute.Geoshape;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.util.List;
 
 @Slf4j
 public class JanusEdge {
@@ -27,7 +30,8 @@ public class JanusEdge {
 	public static void main(String[] args) {
 		JanusEdge edge = new JanusEdge();
 		try {
-			edge.proc();
+			//edge.proc();
+			edge.addLink();
 		} finally {
 			if (edge.tx != null && edge.tx.isOpen())
 				edge.tx.close();
@@ -90,6 +94,61 @@ public class JanusEdge {
 				g.tx().commit();
 			}
 		} catch (Exception e) {
+			log.error("", e);
+		}
+	}
+
+	/**
+	 * 국가 표준 링크 정보 업로드
+	 */
+	private void addLink() {
+		NodeLinkReader redader = new NodeLinkReader();
+		List<MoctLinkVo> linkVoMap = redader.readLink();
+		log.info("read link count: {}", linkVoMap.size());
+
+		tx = graph.newTransaction();
+
+		try {
+			int count = 0;
+			int index = 0;
+
+			for (MoctLinkVo linkVo : linkVoMap) {
+				String startNode = linkVo.getStartNode();
+				String endNode = linkVo.getEndNode();
+
+				try {
+					Geoshape geoshape = GeoHelper.convertMultiLineString(linkVo.getLineString());
+
+					Vertex startVertex = g.V().hasLabel("node").has("NODE_ID", startNode).next();
+					Vertex endVertex = g.V().hasLabel("node").has("NODE_ID", endNode).next();
+
+					g.V(startVertex).addE("way").to(endVertex).property("LANES", linkVo.getLanes())
+						.property("ROAD_RANK", linkVo.getRoadRank()).property("ROAD_TYPE", linkVo.getRoadType())
+						.property("ROAD_NO", linkVo.getRoadNo()).property("ROAD_NAME", linkVo.getRoadName())
+						.property("GEOM", geoshape).property("MAX_SPD", linkVo.getMaxSpd())
+						.property("LENGTH", linkVo.getLength()).next();
+
+				} catch (Exception e) {
+					e.printStackTrace();
+					break;
+					//continue;
+				}
+
+				++count;
+				if (++index % 10000 == 0) {
+					g.tx().commit();
+					//tx.commit();
+					tx = graph.newTransaction();
+					log.info("add node vertex count: {}", count);
+					index = 0;
+				}
+			}
+			//tx.commit();
+			g.tx().commit();
+			tx = graph.newTransaction();
+		} catch (Exception e) {
+			g.tx().rollback();
+			//tx.rollback();
 			log.error("", e);
 		}
 	}

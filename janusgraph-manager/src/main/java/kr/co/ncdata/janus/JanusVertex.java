@@ -1,5 +1,6 @@
 package kr.co.ncdata.janus;
 
+import kr.co.ncdata.janus.vo.MoctNodeVo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.structure.T;
@@ -9,11 +10,14 @@ import org.janusgraph.core.JanusGraph;
 import org.janusgraph.core.JanusGraphFactory;
 import org.janusgraph.core.JanusGraphTransaction;
 import org.janusgraph.core.PropertyKey;
+import org.janusgraph.core.attribute.Geoshape;
 import org.janusgraph.core.schema.JanusGraphManagement;
 import org.janusgraph.graphdb.database.management.ManagementSystem;
+import org.locationtech.jts.geom.Point;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.util.List;
 
 @Slf4j
 public class JanusVertex {
@@ -31,8 +35,9 @@ public class JanusVertex {
 	public static void main(String[] args) {
 		JanusVertex jm = new JanusVertex();
 		try {
-			jm.proc();
-		} catch (InterruptedException e) {
+			//jm.proc();
+			jm.addNode();
+		} catch (Exception e) {
 			log.error("", e);
 		} finally {
 			if (jm.tx != null && jm.tx.isOpen())
@@ -57,7 +62,7 @@ public class JanusVertex {
 			tx.commit();
 		} catch (Exception e) {
 			tx.rollback();
-			e.printStackTrace();
+			log.error("", e);
 		}
 	}
 
@@ -82,7 +87,7 @@ public class JanusVertex {
 
 		tx = graph.newTransaction();
 
-		try (BufferedReader reader = new BufferedReader(new FileReader("/home/janus/map/daegu_node.csv"))) {
+		try (BufferedReader reader = new BufferedReader(new FileReader(JanusManager.OSM_NODE_FILE))) {
 			String line;
 			while ((line = reader.readLine()) != null) {
 				String[] col = line.split(",");
@@ -102,5 +107,42 @@ public class JanusVertex {
 		} catch (Exception e) {
 			log.error("", e);
 		}
+	}
+
+	/**
+	 * 국가 표준 노드 정보 업로드
+	 */
+	private void addNode() {
+		NodeLinkReader redader = new NodeLinkReader();
+		List<MoctNodeVo> nodeVoMap = redader.readNode();
+		log.info("read node count: {}", nodeVoMap.size());
+
+		tx = graph.newTransaction();
+
+		try {
+			int count = 0;
+			int index = 0;
+
+			for (MoctNodeVo nodeVo : nodeVoMap) {
+				Point point = nodeVo.getPoint();
+				Geoshape janusPoint = Geoshape.point(point.getY(), point.getX());
+
+				tx.addVertex(T.label, "node", "NODE_ID", nodeVo.getNodeId(), "POINT", janusPoint, "NODE_TYPE",
+					nodeVo.getNodeType(), "NODE_NAME", nodeVo.getNodeName(), "TURN_P", nodeVo.getTurnP());
+
+				++count;
+				if (++index % 10000 == 0) {
+					tx.commit();
+					tx = graph.newTransaction();
+					log.info("add node vertex count: {}", count);
+					index = 0;
+				}
+			}
+			tx.commit();
+		} catch (Exception e) {
+			tx.rollback();
+			log.error("", e);
+		}
+
 	}
 }
