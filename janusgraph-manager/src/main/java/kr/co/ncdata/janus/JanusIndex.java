@@ -10,7 +10,9 @@ import org.janusgraph.core.JanusGraphFactory;
 import org.janusgraph.core.PropertyKey;
 import org.janusgraph.core.schema.JanusGraphIndex;
 import org.janusgraph.core.schema.JanusGraphManagement;
+import org.janusgraph.core.schema.SchemaAction;
 import org.janusgraph.core.schema.SchemaStatus;
+import org.janusgraph.graphdb.database.management.ManagementSystem;
 
 import java.util.Iterator;
 
@@ -25,8 +27,10 @@ public class JanusIndex {
 	public static void main(String[] args) {
 		JanusIndex j = new JanusIndex();
 		try {
-			//j.printSchema();
-			j.addEdgeKey();
+			//j.removeVertexKey();
+			j.addVertexKey();
+			//j.addEdgeKey();
+			j.printSchema();
 		} finally {
 			if (j.graph != null && j.graph.isOpen())
 				j.graph.close();
@@ -66,30 +70,59 @@ public class JanusIndex {
 	private void addVertexKey() {
 		JanusGraphManagement mgmt = graph.openManagement();
 
+		String vertexIndexName = "NODE_INDEX";
 		try {
-			String keyName = "NODE_ID";
-			if (mgmt.getPropertyKey(keyName) == null) {
-				PropertyKey newKey = mgmt.makePropertyKey(keyName).dataType(String.class)  // 데이터 타입 지정 (예: String)
-					.cardinality(Cardinality.SINGLE)  // 카디널리티 지정
-					.make();
-
-				mgmt.buildIndex("NODE_INDEX", Vertex.class).addKey(newKey).buildMixedIndex("search");
-				//ManagementSystem.awaitGraphIndexStatus(graph, "EDGE_INDEX").call();
-
-				// Edge Label에 새 Key 추가 (선택적)
-				//String edgeLabel = "existingEdgeLabel";
-				//mgmt.addProperties(mgmt.getEdgeLabel(edgeLabel), newKey);
-
-
-				// 변경사항 커밋
-				mgmt.commit();
-				log.info("Vertex Key added: {}", keyName);
-			} else {
-				log.info("Vertex Key: {} already exists", keyName);
-				mgmt.rollback();
+			if (mgmt.getPropertyKey(vertexIndexName) == null) {
+				mgmt.makePropertyKey("NODE_ID").dataType(String.class).cardinality(Cardinality.SINGLE).make();
 			}
+
+			mgmt.buildIndex(vertexIndexName, Vertex.class).addKey(mgmt.getPropertyKey("NODE_ID"))
+				//.unique().buildCompositeIndex();
+				.buildMixedIndex("search");
+			mgmt.commit();
+			ManagementSystem.awaitGraphIndexStatus(graph, vertexIndexName).status(SchemaStatus.INSTALLED).call();
+
+			// 등록
+			mgmt = graph.openManagement();
+			mgmt.updateIndex(mgmt.getGraphIndex(vertexIndexName), SchemaAction.REGISTER_INDEX).get();
+			mgmt.commit();
+			ManagementSystem.awaitGraphIndexStatus(graph, vertexIndexName).status(SchemaStatus.REGISTERED).call();
+
+			// index 활성화
+			mgmt = graph.openManagement();
+			mgmt.updateIndex(mgmt.getGraphIndex(vertexIndexName), SchemaAction.ENABLE_INDEX).get();
+			mgmt.commit();
+			ManagementSystem.awaitGraphIndexStatus(graph, vertexIndexName).status(SchemaStatus.ENABLED).call();
 		} catch (Exception e) {
 			mgmt.rollback();
+			log.error("", e);
+		}
+	}
+
+	/**
+	 * Vertex Key 삭제
+	 */
+	private void removeVertexKey() {
+
+		String vertexIndexName = "NODE_INDEX";
+		try {
+			// Index LifeCycle 에 따라 DISABLE -> DISCARD -> DROP
+			JanusGraphManagement mgmt = graph.openManagement();
+			mgmt.updateIndex(mgmt.getGraphIndex(vertexIndexName), SchemaAction.DISABLE_INDEX).get();
+			mgmt.commit();
+			ManagementSystem.awaitGraphIndexStatus(graph, vertexIndexName).status(SchemaStatus.DISABLED).call();
+
+			mgmt = graph.openManagement();
+			mgmt.updateIndex(mgmt.getGraphIndex(vertexIndexName), SchemaAction.DISCARD_INDEX).get();
+			mgmt.commit();
+			ManagementSystem.awaitGraphIndexStatus(graph, vertexIndexName).status(SchemaStatus.DISCARDED).call();
+
+			mgmt = graph.openManagement();
+			mgmt.updateIndex(mgmt.getGraphIndex(vertexIndexName), SchemaAction.DROP_INDEX).get();
+			mgmt.commit();
+			//ManagementSystem.awaitGraphIndexStatus(graph, vertexIndexName).call();
+
+		} catch (Exception e) {
 			log.error("", e);
 		}
 	}
