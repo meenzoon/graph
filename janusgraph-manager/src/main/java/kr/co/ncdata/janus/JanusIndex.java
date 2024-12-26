@@ -8,7 +8,6 @@ import org.janusgraph.core.Cardinality;
 import org.janusgraph.core.JanusGraph;
 import org.janusgraph.core.JanusGraphFactory;
 import org.janusgraph.core.PropertyKey;
-import org.janusgraph.core.schema.JanusGraphIndex;
 import org.janusgraph.core.schema.JanusGraphManagement;
 import org.janusgraph.core.schema.SchemaAction;
 import org.janusgraph.core.schema.SchemaStatus;
@@ -51,13 +50,6 @@ public class JanusIndex {
 
 			log.info("schema: {}", mgmt.printSchema());
 
-			JanusGraphIndex index = mgmt.getGraphIndex("NODE_INDEX");
-			log.info("index name: {}, isUnique: {}, isMixedIndex: {}, isCompositeIndex: {}", index.name(),
-				index.isUnique(), index.isMixedIndex(), index.isCompositeIndex());
-
-			SchemaStatus status = index.getIndexStatus(mgmt.getPropertyKey("NODE_ID"));
-			log.info("status: {}", status.isStable());
-
 			//ElasticSearchIndex searchIndex = (ElasticSearchIndex) ((IndexProvider) graph.getBackend().getIndexInformation("search")).getSearchIndex();
 		} finally {
 			mgmt.rollback();
@@ -71,14 +63,15 @@ public class JanusIndex {
 		JanusGraphManagement mgmt = graph.openManagement();
 
 		String vertexIndexName = "NODE_INDEX";
+		String propertyKey = "NODE_ID";
 		try {
-			if (mgmt.getPropertyKey(vertexIndexName) == null) {
-				mgmt.makePropertyKey("NODE_ID").dataType(String.class).cardinality(Cardinality.SINGLE).make();
+			if (mgmt.getPropertyKey(propertyKey) == null) {
+				mgmt.makePropertyKey(propertyKey).dataType(String.class).cardinality(Cardinality.SINGLE).make();
 			}
 
-			mgmt.buildIndex(vertexIndexName, Vertex.class).addKey(mgmt.getPropertyKey("NODE_ID"))
-				//.unique().buildCompositeIndex();
-				.buildMixedIndex("search");
+			mgmt.buildIndex(vertexIndexName, Vertex.class).addKey(mgmt.getPropertyKey(propertyKey)).unique()
+				.buildCompositeIndex();
+			//.buildMixedIndex("search");
 			mgmt.commit();
 			ManagementSystem.awaitGraphIndexStatus(graph, vertexIndexName).status(SchemaStatus.INSTALLED).call();
 
