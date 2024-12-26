@@ -32,12 +32,22 @@ public class JanusEdge {
 		try {
 			//edge.proc();
 			edge.addLink();
+		} catch (Exception e) {
+			log.error("", e);
 		} finally {
 			if (edge.tx != null && edge.tx.isOpen())
 				edge.tx.close();
 
 			if (edge.graph != null && edge.graph.isOpen())
 				edge.graph.close();
+			if (edge.g != null) {
+				try {
+					edge.g.close();
+				} catch (Exception e) {
+					log.error("", e);
+				}
+			}
+
 		}
 	}
 
@@ -101,7 +111,7 @@ public class JanusEdge {
 	/**
 	 * 국가 표준 링크 정보 업로드
 	 */
-	private void addLink() {
+	private void addLink() throws Exception {
 		NodeLinkReader redader = new NodeLinkReader();
 		List<MoctLinkVo> linkVoMap = redader.readLink();
 		log.info("read link count: {}", linkVoMap.size());
@@ -118,15 +128,16 @@ public class JanusEdge {
 
 				try {
 					Geoshape geoshape = GeoHelper.convertMultiLineString(linkVo.getLineString());
+					log.info("startNode: {}, endNode: {}", startNode, endNode);
 
 					Vertex startVertex = g.V().hasLabel("node").has("NODE_ID", startNode).next();
 					Vertex endVertex = g.V().hasLabel("node").has("NODE_ID", endNode).next();
 
-					g.V(startVertex).addE("way").to(endVertex).property("LANES", linkVo.getLanes())
-						.property("ROAD_RANK", linkVo.getRoadRank()).property("ROAD_TYPE", linkVo.getRoadType())
-						.property("ROAD_NO", linkVo.getRoadNo()).property("ROAD_NAME", linkVo.getRoadName())
-						.property("GEOM", geoshape).property("MAX_SPD", linkVo.getMaxSpd())
-						.property("LENGTH", linkVo.getLength()).next();
+					g.V(startVertex).addE("way").to(endVertex).property("LINK_ID", linkVo.getLinkId())
+						.property("LANES", linkVo.getLanes()).property("ROAD_RANK", linkVo.getRoadRank())
+						.property("ROAD_TYPE", linkVo.getRoadType()).property("ROAD_NO", linkVo.getRoadNo())
+						.property("ROAD_NAME", linkVo.getRoadName()).property("GEOM", geoshape)
+						.property("MAX_SPD", linkVo.getMaxSpd()).property("LENGTH", linkVo.getLength()).next();
 
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -139,7 +150,7 @@ public class JanusEdge {
 					g.tx().commit();
 					//tx.commit();
 					tx = graph.newTransaction();
-					log.info("add node vertex count: {}", count);
+					log.info("add link vertex count: {}", count);
 					index = 0;
 				}
 			}
@@ -148,6 +159,7 @@ public class JanusEdge {
 			tx = graph.newTransaction();
 		} catch (Exception e) {
 			g.tx().rollback();
+
 			//tx.rollback();
 			log.error("", e);
 		}
