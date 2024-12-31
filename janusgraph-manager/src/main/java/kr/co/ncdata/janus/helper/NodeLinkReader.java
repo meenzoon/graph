@@ -1,5 +1,6 @@
-package kr.co.ncdata.janus;
+package kr.co.ncdata.janus.helper;
 
+import kr.co.ncdata.janus.JanusManager;
 import kr.co.ncdata.janus.vo.MoctLinkVo;
 import kr.co.ncdata.janus.vo.MoctNodeVo;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +44,10 @@ public class NodeLinkReader {
 		}
 	}
 
+	/**
+	 * 국가 표준 노드 정보 읽기
+	 * @return 노드 목록
+	 */
 	public List<MoctNodeVo> readNode() {
 		List<MoctNodeVo> moctNodeVoList = new ArrayList<>();
 		try {
@@ -69,6 +74,10 @@ public class NodeLinkReader {
 		return moctNodeVoList;
 	}
 
+	/**
+	 * 국가 표준 링크 정보 읽기
+	 * @return 링크 목록
+	 */
 	public List<MoctLinkVo> readLink() {
 		List<MoctLinkVo> moctLinkVoMap = new ArrayList<>();
 		try {
