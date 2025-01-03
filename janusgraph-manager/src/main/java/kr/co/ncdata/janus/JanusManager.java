@@ -13,6 +13,10 @@ public abstract class JanusManager {
 	 * janusgraph properties file name
 	 */
 	public static final String PROP_FILE_NAME = CONF_PATH + File.separator + "janusgraph-hbase-es.properties";
+	/**
+	 * janusgraph remote properties file name
+	 */
+	public static final String REMOTE_PROP_FILE_NAME = CONF_PATH + File.separator + "remote-graph.properties";
 
 	/**
 	 * 데이터 저장 위치

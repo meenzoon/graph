@@ -1,4 +1,4 @@
-package kr.co.ncdata.janus.helper;
+package kr.co.ncdata.neodb;
 
 import org.openstreetmap.osmosis.core.container.v0_6.EntityContainer;
 import org.openstreetmap.osmosis.core.container.v0_6.NodeContainer;
