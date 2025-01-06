@@ -12,7 +12,8 @@ public abstract class JanusManager {
 	/**
 	 * janusgraph properties file name
 	 */
-	public static final String PROP_FILE_NAME = CONF_PATH + File.separator + "janusgraph-hbase-es.properties";
+	//	public static final String PROP_FILE_NAME = CONF_PATH + File.separator + "janusgraph-hbase-es.properties";
+	public static final String PROP_FILE_NAME = CONF_PATH + File.separator + "janusgraph-inmemory.properties";
 
 	/**
 	 * 데이터 저장 위치
@@ -31,4 +32,9 @@ public abstract class JanusManager {
 	private static final String ITS_FILE_PATH = DATA_PATH + File.separator + "nodelink";
 	public static final String ITS_NODE_FILE = ITS_FILE_PATH + File.separator + "MOCT_NODE.shp";
 	public static final String ITS_LINK_FILE = ITS_FILE_PATH + File.separator + "MOCT_LINK.shp";
+
+	/**
+	 * 차량 운행 정보 File
+	 */
+	public static final String DTG_FILE_PATH = DATA_PATH + File.separator + "driveinfo";
 }
