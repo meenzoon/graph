@@ -1,5 +1,7 @@
 package kr.co.ncdata.janus;
 
+import kr.co.ncdata.janus.helper.GeoHelper;
+import kr.co.ncdata.janus.helper.NodeLinkReader;
 import kr.co.ncdata.janus.vo.MoctLinkVo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
@@ -128,16 +130,24 @@ public class JanusEdge {
 
 				try {
 					Geoshape geoshape = GeoHelper.convertMultiLineString(linkVo.getLineString());
-					log.info("startNode: {}, endNode: {}", startNode, endNode);
+					//log.info("startNode: {}, endNode: {}", startNode, endNode);
 
 					Vertex startVertex = g.V().hasLabel("node").has("NODE_ID", startNode).next();
 					Vertex endVertex = g.V().hasLabel("node").has("NODE_ID", endNode).next();
 
-					g.V(startVertex).addE("way").to(endVertex).property("LINK_ID", linkVo.getLinkId())
-						.property("LANES", linkVo.getLanes()).property("ROAD_RANK", linkVo.getRoadRank())
-						.property("ROAD_TYPE", linkVo.getRoadType()).property("ROAD_NO", linkVo.getRoadNo())
-						.property("ROAD_NAME", linkVo.getRoadName()).property("GEOM", geoshape)
-						.property("MAX_SPD", linkVo.getMaxSpd()).property("LENGTH", linkVo.getLength()).next();
+					g.V(startVertex)
+						.addE("way")
+						.to(endVertex)
+						.property("LINK_ID", linkVo.getLinkId())
+						.property("LANES", linkVo.getLanes())
+						.property("ROAD_RANK", linkVo.getRoadRank())
+						.property("ROAD_TYPE", linkVo.getRoadType())
+						.property("ROAD_NO", linkVo.getRoadNo())
+						.property("ROAD_NAME", linkVo.getRoadName())
+						.property("GEOM", geoshape)
+						.property("MAX_SPD", linkVo.getMaxSpd())
+						.property("LENGTH", linkVo.getLength())
+						.next();
 
 				} catch (Exception e) {
 					e.printStackTrace();

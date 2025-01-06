@@ -10,9 +10,9 @@
     <properties>
         <jdk.version>17</jdk.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <janusgraph.version>1.0.0</janusgraph.version>
-        <gremlin.version>3.7.0</gremlin.version>
-        <hbase.version>2.6.1</hbase.version>
+        <janusgraph.version>1.1.0</janusgraph.version>
+        <gremlin.version>3.7.3</gremlin.version>
+        <hbase.version>2.0.1</hbase.version>
         <log4j.version>2.24.2</log4j.version>
         <!--<geotools.version>14.5</geotools.version>-->
         <geotools.version>29.4</geotools.version>
@@ -89,11 +89,6 @@
             <groupId>org.apache.tinkerpop</groupId>
             <artifactId>gremlin-driver</artifactId>
             <version>${gremlin.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.janusgraph</groupId>
-            <artifactId>janusgraph-inmemory</artifactId>
-            <version>${janusgraph.version}</version>
         </dependency>
 
         <!-- hbase client -->
