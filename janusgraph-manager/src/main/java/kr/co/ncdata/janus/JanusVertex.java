@@ -27,7 +27,7 @@ public class JanusVertex {
 	GraphTraversalSource g;
 
 	public JanusVertex() {
-		graph = JanusGraphFactory.open(JanusManager.PROP_FILE_NAME);
+		graph = JanusGraphFactory.open(JanusConfig.HBASE_ES_PROP_FILE_NAME);
 
 		g = graph.traversal();
 		tx = graph.newTransaction();
@@ -88,7 +88,7 @@ public class JanusVertex {
 
 		tx = graph.newTransaction();
 
-		try (BufferedReader reader = new BufferedReader(new FileReader(JanusManager.OSM_NODE_FILE))) {
+		try (BufferedReader reader = new BufferedReader(new FileReader(JanusConfig.OSM_NODE_FILE))) {
 			String line;
 			while ((line = reader.readLine()) != null) {
 				String[] col = line.split(",");

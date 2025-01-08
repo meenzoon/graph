@@ -1,6 +1,6 @@
 package kr.co.ncdata.janus.helper;
 
-import kr.co.ncdata.janus.JanusManager;
+import kr.co.ncdata.janus.JanusConfig;
 import kr.co.ncdata.janus.vo.MoctLinkVo;
 import kr.co.ncdata.janus.vo.MoctNodeVo;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +23,7 @@ public class NodeLinkReader {
 
 	public static void main(String[] args) {
 		NodeLinkReader reader = new NodeLinkReader();
-		//reader.readShp(JanusManager.ITS_LINK_FILE);
+		//reader.readShp(JanusConfig.ITS_LINK_FILE);
 		List<MoctNodeVo> result = reader.readNode();
 		log.info("result size: {}", result.size());
 	}
@@ -51,7 +51,7 @@ public class NodeLinkReader {
 	public List<MoctNodeVo> readNode() {
 		List<MoctNodeVo> moctNodeVoList = new ArrayList<>();
 		try {
-			SimpleFeatureIterator features = this.readShp(JanusManager.ITS_NODE_FILE);
+			SimpleFeatureIterator features = this.readShp(JanusConfig.ITS_NODE_FILE);
 
 
 			while (features.hasNext()) {
@@ -81,7 +81,7 @@ public class NodeLinkReader {
 	public List<MoctLinkVo> readLink() {
 		List<MoctLinkVo> moctLinkVoMap = new ArrayList<>();
 		try {
-			SimpleFeatureIterator features = readShp(JanusManager.ITS_LINK_FILE);
+			SimpleFeatureIterator features = readShp(JanusConfig.ITS_LINK_FILE);
 
 			while (features.hasNext()) {
 				SimpleFeature feature = features.next();

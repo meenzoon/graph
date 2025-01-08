@@ -20,7 +20,7 @@ public class JanusIndex {
 	JanusGraph graph;
 
 	public JanusIndex() {
-		graph = JanusGraphFactory.open(JanusManager.PROP_FILE_NAME);
+		graph = JanusGraphFactory.open(JanusConfig.HBASE_ES_PROP_FILE_NAME);
 	}
 
 	public static void main(String[] args) {
@@ -49,8 +49,6 @@ public class JanusIndex {
 			}
 
 			log.info("schema: {}", mgmt.printSchema());
-
-			//ElasticSearchIndex searchIndex = (ElasticSearchIndex) ((IndexProvider) graph.getBackend().getIndexInformation("search")).getSearchIndex();
 		} finally {
 			mgmt.rollback();
 		}
@@ -69,7 +67,9 @@ public class JanusIndex {
 				mgmt.makePropertyKey(propertyKey).dataType(String.class).cardinality(Cardinality.SINGLE).make();
 			}
 
-			mgmt.buildIndex(vertexIndexName, Vertex.class).addKey(mgmt.getPropertyKey(propertyKey)).unique()
+			mgmt.buildIndex(vertexIndexName, Vertex.class)
+				.addKey(mgmt.getPropertyKey(propertyKey))
+				.unique()
 				.buildCompositeIndex();
 			//.buildMixedIndex("search");
 			mgmt.commit();

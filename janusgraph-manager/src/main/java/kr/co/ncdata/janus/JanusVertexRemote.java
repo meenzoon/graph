@@ -27,7 +27,7 @@ public class JanusVertexRemote {
 	Configuration conf;
 
 	public JanusVertexRemote() throws Exception {
-		conf = ConfigurationUtil.loadPropertiesConfig(JanusManager.REMOTE_PROP_FILE_NAME);
+		conf = ConfigurationUtil.loadPropertiesConfig(JanusConfig.REMOTE_PROP_FILE_NAME);
 		try {
 			log.info("gremlin.remote.driver.clusterFile: {}", conf.getString("gremlin.remote.driver.clusterFile"));
 			cluster = Cluster.open(conf.getString("gremlin.remote.driver.clusterFile"));
