@@ -35,4 +35,9 @@ public abstract class JanusManager {
 	private static final String ITS_FILE_PATH = DATA_PATH + File.separator + "nodelink";
 	public static final String ITS_NODE_FILE = ITS_FILE_PATH + File.separator + "MOCT_NODE.shp";
 	public static final String ITS_LINK_FILE = ITS_FILE_PATH + File.separator + "MOCT_LINK.shp";
+
+	/**
+	 * 차량 운행 정보 File
+	 */
+	public static final String DTG_FILE_PATH = DATA_PATH + File.separator + "driveinfo";
 }
