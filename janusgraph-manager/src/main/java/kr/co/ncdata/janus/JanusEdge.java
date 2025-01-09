@@ -22,7 +22,7 @@ public class JanusEdge {
 	GraphTraversalSource g;
 
 	public JanusEdge() {
-		graph = JanusGraphFactory.open(JanusManager.PROP_FILE_NAME);
+		graph = JanusGraphFactory.open(JanusConfig.HBASE_ES_PROP_FILE_NAME);
 
 		System.out.println("graph new transaction");
 		g = graph.traversal();
@@ -57,7 +57,7 @@ public class JanusEdge {
 		int index = 0;
 
 		log.info("read csv");
-		try (BufferedReader reader = new BufferedReader(new FileReader(JanusManager.OSM_WAY_FILE))) {
+		try (BufferedReader reader = new BufferedReader(new FileReader(JanusConfig.OSM_WAY_FILE))) {
 			String line;
 			while ((line = reader.readLine()) != null) {
 				if (++index == 1)

@@ -12,7 +12,7 @@ public class JanusGraphDelete {
 	GraphTraversalSource g;
 
 	public JanusGraphDelete() {
-		graph = JanusGraphFactory.open(JanusManager.PROP_FILE_NAME);
+		graph = JanusGraphFactory.open(JanusConfig.HBASE_ES_PROP_FILE_NAME);
 		g = graph.traversal();
 	}
 
