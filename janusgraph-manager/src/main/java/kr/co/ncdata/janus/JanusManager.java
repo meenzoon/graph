@@ -1,43 +1,43 @@
 package kr.co.ncdata.janus;
 
-import java.io.File;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
+import org.janusgraph.core.JanusGraph;
+import org.janusgraph.core.JanusGraphFactory;
 
-public abstract class JanusManager {
-	private static final String OS_ENV = System.getProperty("os.name").toLowerCase();
-	private static final boolean ENV_CONFIG = OS_ENV.contains("win");
-	/**
-	 * janusgraph config path
-	 */
-	private static final String CONF_PATH = ENV_CONFIG ? "C:\\tools\\map" : "/home/janus/janusgraph-1.0.0/conf";
-	/**
-	 * janusgraph properties file name
-	 */
-	public static final String PROP_FILE_NAME = CONF_PATH + File.separator + "janusgraph-hbase-es.properties";
-	/**
-	 * janusgraph remote properties file name
-	 */
-	public static final String REMOTE_PROP_FILE_NAME = CONF_PATH + File.separator + "remote-graph.properties";
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
-	/**
-	 * 데이터 저장 위치
-	 */
-	private static final String DATA_PATH = ENV_CONFIG ? "C:\\tools\\map" : "/home/janus/map";
+@Slf4j
+public class JanusManager {
+	@Getter
+	private static JanusGraph graph;
+	@Getter
+	private static GraphTraversalSource traversalSource;
 
-	/**
-	 * OSM Node, Way File
-	 */
-	public static final String OSM_NODE_FILE = DATA_PATH + File.separator + "daegu_node.csv";
-	public static final String OSM_WAY_FILE = DATA_PATH + File.separator + "daegu_way.csv";
+	public static void closeGraph() {
+		try {
+			traversalSource.close();
+		} catch (Exception e) {
+			log.error("", e);
+		}
+		if (graph != null && graph.isOpen()) {
+			graph.close();
+		}
+	}
 
-	/**
-	 * 국가표준노드링크 File
-	 */
-	private static final String ITS_FILE_PATH = DATA_PATH + File.separator + "nodelink";
-	public static final String ITS_NODE_FILE = ITS_FILE_PATH + File.separator + "MOCT_NODE.shp";
-	public static final String ITS_LINK_FILE = ITS_FILE_PATH + File.separator + "MOCT_LINK.shp";
+	public static void initGraph(String fileName) throws RuntimeException {
+		// 파일이 있는지 체크
+		if (!Files.exists(Paths.get(fileName))) {
+			throw new RuntimeException("fileName" + fileName + " is not exist");
+		}
 
-	/**
-	 * 차량 운행 정보 File
-	 */
-	public static final String DTG_FILE_PATH = DATA_PATH + File.separator + "driveinfo";
+		graph = JanusGraphFactory.open(fileName);
+		traversalSource = graph.traversal();
+
+		if (graph == null || graph.isClosed()) {
+			throw new RuntimeException("graph is not open");
+		}
+	}
 }

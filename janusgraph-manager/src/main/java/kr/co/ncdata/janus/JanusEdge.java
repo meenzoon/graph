@@ -6,9 +6,6 @@ import kr.co.ncdata.janus.vo.MoctLinkVo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
-import org.janusgraph.core.JanusGraph;
-import org.janusgraph.core.JanusGraphFactory;
-import org.janusgraph.core.JanusGraphTransaction;
 import org.janusgraph.core.attribute.Geoshape;
 
 import java.io.BufferedReader;
@@ -17,44 +14,24 @@ import java.util.List;
 
 @Slf4j
 public class JanusEdge {
-	JanusGraph graph;
-	JanusGraphTransaction tx;
-	GraphTraversalSource g;
-
-	public JanusEdge() {
-		graph = JanusGraphFactory.open(JanusConfig.HBASE_ES_PROP_FILE_NAME);
-
-		System.out.println("graph new transaction");
-		g = graph.traversal();
-		tx = graph.newTransaction();
-	}
 
 	public static void main(String[] args) {
-		JanusEdge edge = new JanusEdge();
 		try {
+			JanusEdge edge = new JanusEdge();
+			JanusManager.initGraph(JanusConfig.HBASE_ES_PROP_FILE_NAME);
 			//edge.proc();
 			edge.addLink();
 		} catch (Exception e) {
 			log.error("", e);
 		} finally {
-			if (edge.tx != null && edge.tx.isOpen())
-				edge.tx.close();
-
-			if (edge.graph != null && edge.graph.isOpen())
-				edge.graph.close();
-			if (edge.g != null) {
-				try {
-					edge.g.close();
-				} catch (Exception e) {
-					log.error("", e);
-				}
-			}
-
+			JanusManager.closeGraph();
 		}
 	}
 
 	public void proc() {
 		int index = 0;
+
+		GraphTraversalSource g = JanusManager.getTraversalSource();
 
 		log.info("read csv");
 		try (BufferedReader reader = new BufferedReader(new FileReader(JanusConfig.OSM_WAY_FILE))) {
@@ -72,12 +49,6 @@ public class JanusEdge {
 				String startNode = nodes[0].replace("\"", "").replace("[", "").trim();
 				String endNode = nodes[nodes.length - 1].replace("\"", "").replace("]", "").trim();
 
-
-				//Vertex startVertex = .next();
-				//System.out.println("find complete startVetext");
-				//Vertex endVertex = .next();
-
-				//System.out.println("add Edge");
 				Vertex startVertex;
 				Vertex endVertex;
 
@@ -91,21 +62,10 @@ public class JanusEdge {
 					continue;
 				}
 
-				//startVertex.addEdge("way", endVertex);
-
-				/*
-				jgt.traversal().addE("way")
-					.from(  __.V().has("id", startNode))
-					.to(__.V().has("id", endNode));
-				 */
-
-				//jgt.addVertex(T.label, "osmNode", "id", col[0], "latitude", col[1], "longitude", col[2]);
-
-				tx.commit();
-				tx = graph.newTransaction();
 				g.tx().commit();
 			}
 		} catch (Exception e) {
+			g.tx().rollback();
 			log.error("", e);
 		}
 	}
@@ -118,7 +78,7 @@ public class JanusEdge {
 		List<MoctLinkVo> linkVoMap = redader.readLink();
 		log.info("read link count: {}", linkVoMap.size());
 
-		tx = graph.newTransaction();
+		GraphTraversalSource g = JanusManager.getTraversalSource();
 
 		try {
 			int count = 0;
@@ -150,7 +110,7 @@ public class JanusEdge {
 						.next();
 
 				} catch (Exception e) {
-					e.printStackTrace();
+					log.error("", e);
 					break;
 					//continue;
 				}
@@ -158,19 +118,15 @@ public class JanusEdge {
 				++count;
 				if (++index % 10000 == 0) {
 					g.tx().commit();
-					//tx.commit();
-					tx = graph.newTransaction();
+					g.tx().begin();
 					log.info("add link vertex count: {}", count);
 					index = 0;
 				}
 			}
-			//tx.commit();
 			g.tx().commit();
-			tx = graph.newTransaction();
+			g.tx().close();
 		} catch (Exception e) {
 			g.tx().rollback();
-
-			//tx.rollback();
 			log.error("", e);
 		}
 	}
