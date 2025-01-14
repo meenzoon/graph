@@ -3,12 +3,10 @@ package kr.co.ncdata.janus;
 import kr.co.ncdata.janus.helper.NodeLinkReader;
 import kr.co.ncdata.janus.vo.MoctNodeVo;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.janusgraph.core.Cardinality;
 import org.janusgraph.core.JanusGraph;
-import org.janusgraph.core.JanusGraphFactory;
 import org.janusgraph.core.JanusGraphTransaction;
 import org.janusgraph.core.PropertyKey;
 import org.janusgraph.core.attribute.Geoshape;
@@ -22,30 +20,16 @@ import java.util.List;
 
 @Slf4j
 public class JanusVertex {
-	JanusGraph graph;
-	JanusGraphTransaction tx;
-	GraphTraversalSource g;
-
-	public JanusVertex() {
-		graph = JanusGraphFactory.open(JanusConfig.HBASE_ES_PROP_FILE_NAME);
-
-		g = graph.traversal();
-		tx = graph.newTransaction();
-	}
-
 	public static void main(String[] args) {
 		JanusVertex jm = new JanusVertex();
 		try {
+			JanusManager.initGraph(JanusConfig.HBASE_ES_PROP_FILE_NAME);
 			//jm.proc();
 			jm.addNode();
 		} catch (Exception e) {
 			log.error("", e);
 		} finally {
-			if (jm.tx != null && jm.tx.isOpen())
-				jm.tx.close();
-
-			if (jm.graph != null && jm.graph.isOpen())
-				jm.graph.close();
+			JanusManager.closeGraph();
 		}
 	}
 
@@ -54,7 +38,9 @@ public class JanusVertex {
 	 */
 	private void testVertexUpload() {
 		// Vertex 또는 Edge 업로드를 위한 Transaction 생성
-		tx = graph.newTransaction();
+
+		JanusGraph graph = JanusManager.getGraph();
+		JanusGraphTransaction tx = graph.newTransaction();
 		try {
 			Vertex v1 = tx.addVertex(T.label, "person", "name", "John", "age", 30);
 			Vertex v2 = tx.addVertex(T.label, "person", "name", "Jane", "age", 28);
@@ -73,7 +59,9 @@ public class JanusVertex {
 
 		log.info("add index start");
 
+		JanusGraph graph = JanusManager.getGraph();
 		JanusGraphManagement mgmt = graph.openManagement();
+		JanusGraphTransaction tx = graph.newTransaction();
 
 		// 속성 키 정의
 		PropertyKey name = mgmt.makePropertyKey("nodeId").dataType(String.class).cardinality(Cardinality.SINGLE).make();
@@ -85,8 +73,6 @@ public class JanusVertex {
 		ManagementSystem.awaitGraphIndexStatus(graph, "NODE_ID").call();
 
 		log.info("add index end");
-
-		tx = graph.newTransaction();
 
 		try (BufferedReader reader = new BufferedReader(new FileReader(JanusConfig.OSM_NODE_FILE))) {
 			String line;
@@ -118,7 +104,8 @@ public class JanusVertex {
 		List<MoctNodeVo> nodeVoMap = redader.readNode();
 		log.info("read node count: {}", nodeVoMap.size());
 
-		tx = graph.newTransaction();
+		JanusGraph graph = JanusManager.getGraph();
+		JanusGraphTransaction tx = graph.newTransaction();
 
 		try {
 			int count = 0;

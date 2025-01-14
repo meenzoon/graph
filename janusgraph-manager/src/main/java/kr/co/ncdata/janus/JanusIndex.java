@@ -6,7 +6,6 @@ import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.janusgraph.core.Cardinality;
 import org.janusgraph.core.JanusGraph;
-import org.janusgraph.core.JanusGraphFactory;
 import org.janusgraph.core.PropertyKey;
 import org.janusgraph.core.schema.JanusGraphManagement;
 import org.janusgraph.core.schema.SchemaAction;
@@ -17,27 +16,22 @@ import java.util.Iterator;
 
 @Slf4j
 public class JanusIndex {
-	JanusGraph graph;
-
-	public JanusIndex() {
-		graph = JanusGraphFactory.open(JanusConfig.HBASE_ES_PROP_FILE_NAME);
-	}
-
 	public static void main(String[] args) {
 		JanusIndex j = new JanusIndex();
 		try {
+			JanusManager.initGraph(JanusConfig.HBASE_ES_PROP_FILE_NAME);
 			//j.removeVertexKey();
 			j.addVertexKey();
 			//j.addEdgeKey();
 			j.printSchema();
 		} finally {
-			if (j.graph != null && j.graph.isOpen())
-				j.graph.close();
+			JanusManager.closeGraph();
 		}
 	}
 
 	private void printSchema() {
 		// Janus Graph 관리 정보 조회를 위한 객체 생성
+		JanusGraph graph = JanusManager.getGraph();
 		JanusGraphManagement mgmt = graph.openManagement();
 
 		try {
@@ -58,6 +52,7 @@ public class JanusIndex {
 	 * Vertex Key 추가
 	 */
 	private void addVertexKey() {
+		JanusGraph graph = JanusManager.getGraph();
 		JanusGraphManagement mgmt = graph.openManagement();
 
 		String vertexIndexName = "NODE_INDEX";
@@ -96,6 +91,7 @@ public class JanusIndex {
 	 * Vertex Key 삭제
 	 */
 	private void removeVertexKey() {
+		JanusGraph graph = JanusManager.getGraph();
 
 		String vertexIndexName = "NODE_INDEX";
 		try {
@@ -124,6 +120,7 @@ public class JanusIndex {
 	 * Edge Key 추가
 	 */
 	private void addEdgeKey() {
+		JanusGraph graph = JanusManager.getGraph();
 		JanusGraphManagement mgmt = graph.openManagement();
 
 		try {

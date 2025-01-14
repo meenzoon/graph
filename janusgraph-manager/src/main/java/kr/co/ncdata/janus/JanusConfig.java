@@ -8,7 +8,7 @@ public abstract class JanusConfig {
 	/**
 	 * janusgraph config path
 	 */
-	private static final String CONF_PATH = ENV_CONFIG ? "C:\\tools\\map" : "/home/janus/janusgraph-1.0.0/conf";
+	private static final String CONF_PATH = ENV_CONFIG ? "C:\\tools\\map" : "/home/janus/janusgraph-1.1.0/conf";
 	/**
 	 * janusgraph properties file name
 	 */
