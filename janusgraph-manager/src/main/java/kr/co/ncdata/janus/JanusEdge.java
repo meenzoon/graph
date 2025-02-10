@@ -99,6 +99,8 @@ public class JanusEdge {
 						.addE("way")
 						.to(endVertex)
 						.property("LINK_ID", linkVo.getLinkId())
+						.property("F_NODE", Long.parseLong(linkVo.getStartNode()))
+						.property("T_NODE", Long.parseLong(linkVo.getEndNode()))
 						.property("LANES", linkVo.getLanes())
 						.property("ROAD_RANK", linkVo.getRoadRank())
 						.property("ROAD_TYPE", linkVo.getRoadType())
