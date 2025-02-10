@@ -1,5 +1,7 @@
 package kr.co.ncdata.janus;
 
+import kr.co.ncdata.janus.helper.GeoHelper;
+import kr.co.ncdata.janus.helper.NodeLinkReader;
 import kr.co.ncdata.janus.vo.MoctLinkVo;
 import kr.co.ncdata.janus.vo.MoctNodeVo;
 import lombok.extern.slf4j.Slf4j;
@@ -10,7 +12,6 @@ import org.janusgraph.core.Cardinality;
 import org.janusgraph.core.JanusGraph;
 import org.janusgraph.core.JanusGraphFactory;
 import org.janusgraph.core.JanusGraphTransaction;
-import org.janusgraph.core.attribute.Geo;
 import org.janusgraph.core.attribute.Geoshape;
 import org.janusgraph.core.schema.JanusGraphManagement;
 import org.janusgraph.core.schema.SchemaAction;
@@ -18,9 +19,6 @@ import org.janusgraph.core.schema.SchemaStatus;
 import org.janusgraph.graphdb.database.management.ManagementSystem;
 import org.locationtech.jts.geom.Point;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.util.HashMap;
 import java.util.List;
 
@@ -31,7 +29,7 @@ public class JanusInmemory {
 	GraphTraversalSource g;
 
 	public JanusInmemory() {
-		graph = JanusGraphFactory.open(JanusManager.PROP_FILE_NAME);
+		graph = JanusGraphFactory.open(JanusConfig.HBASE_ES_PROP_FILE_NAME);
 
 		System.out.println("graph new transaction");
 		g = graph.traversal();
@@ -64,7 +62,7 @@ public class JanusInmemory {
 			end = System.currentTimeMillis();
 			map.put("allLink", end - start);
 
-			jm.gpsMatching();
+			//jm.gpsMatching();
 
 			System.out.println("NODE_ID 인덱스 생성 시간: " + map.get("nodeIndex"));
 			System.out.println("POINT 인덱스 생성 시간: " + map.get("pointIndex"));
@@ -91,7 +89,9 @@ public class JanusInmemory {
 				mgmt.makePropertyKey(propertyKey).dataType(dataType).cardinality(Cardinality.SINGLE).make();
 			}
 
-			mgmt.buildIndex(vertexIndexName, Vertex.class).addKey(mgmt.getPropertyKey(propertyKey)).unique()
+			mgmt.buildIndex(vertexIndexName, Vertex.class)
+				.addKey(mgmt.getPropertyKey(propertyKey))
+				.unique()
 				.buildCompositeIndex();
 			//.buildMixedIndex("search");
 			mgmt.commit();
@@ -172,11 +172,19 @@ public class JanusInmemory {
 					Vertex startVertex = g.V().hasLabel("node").has("NODE_ID", startNode).next();
 					Vertex endVertex = g.V().hasLabel("node").has("NODE_ID", endNode).next();
 
-					g.V(startVertex).addE("way").to(endVertex).property("LINK_ID", linkVo.getLinkId())
-						.property("LANES", linkVo.getLanes()).property("ROAD_RANK", linkVo.getRoadRank())
-						.property("ROAD_TYPE", linkVo.getRoadType()).property("ROAD_NO", linkVo.getRoadNo())
-						.property("ROAD_NAME", linkVo.getRoadName()).property("GEOM", geoshape)
-						.property("MAX_SPD", linkVo.getMaxSpd()).property("LENGTH", linkVo.getLength()).next();
+					g.V(startVertex)
+						.addE("way")
+						.to(endVertex)
+						.property("LINK_ID", linkVo.getLinkId())
+						.property("LANES", linkVo.getLanes())
+						.property("ROAD_RANK", linkVo.getRoadRank())
+						.property("ROAD_TYPE", linkVo.getRoadType())
+						.property("ROAD_NO", linkVo.getRoadNo())
+						.property("ROAD_NAME", linkVo.getRoadName())
+						.property("GEOM", geoshape)
+						.property("MAX_SPD", linkVo.getMaxSpd())
+						.property("LENGTH", linkVo.getLength())
+						.next();
 
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -204,8 +212,10 @@ public class JanusInmemory {
 		}
 	}
 
+	/*
 	private void gpsMatching() {
-		try (BufferedReader reader = new BufferedReader(new FileReader(JanusManager.DTG_FILE_PATH + File.separator + "_37630289.csv"))){
+		try (BufferedReader reader = new BufferedReader(
+			new FileReader(JanusConfig. + File.separator + "_37630289.csv"))) {
 			String line = reader.readLine();
 			String[] split = line.split(",");
 			double lng = Double.parseDouble(split[8]);
@@ -213,11 +223,7 @@ public class JanusInmemory {
 			Geoshape point = Geoshape.circle(lat, lng, 1);
 
 			GraphTraversalSource g = graph.traversal();
-			List<Vertex> list =
-				g.V().hasLabel("node")
-					.has("POINT", Geo.geoWithin(point))
-					.limit(1)
-					.toList();
+			List<Vertex> list = g.V().hasLabel("node").has("POINT", Geo.geoWithin(point)).limit(1).toList();
 
 			for (Vertex v : list) {
 				System.out.println(v.property("NODE_NAME").value());
@@ -226,4 +232,5 @@ public class JanusInmemory {
 			log.error("", e);
 		}
 	}
+	 */
 }
